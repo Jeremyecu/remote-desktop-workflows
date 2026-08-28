@@ -23,20 +23,19 @@ jobs:
           Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd123!" -Force)
           Write-Host "✅ Password Configured!"
 
-        - name: Start Cloudflare Tunnel
-  run: |
-    # Iniciar túnel y guardar salida en archivo
-    $process = Start-Process -NoNewWindow -RedirectStandardOutput "tunnel_output.txt" -FilePath "cloudflared" -ArgumentList "tunnel --url tcp://localhost:3389" -PassThru
-    Start-Sleep -Seconds 15
-    Write-Host "============================================"
-    Write-Host "🌐 LEYENDO URL DEL TÚNEL..."
-    Get-Content "tunnel_output.txt" | ForEach-Object {
-        if ($_ -match "https://.*\.trycloudflare\.com") {
-            Write-Host "🔗 URL ENCONTRADA: $_"
-        }
-    }
-    Write-Host "============================================"
-         
+      - name: Start Cloudflare Tunnel
+        run: |
+          # Iniciar túnel y guardar salida en archivo
+          $process = Start-Process -NoNewWindow -RedirectStandardOutput "tunnel_output.txt" -FilePath "cloudflared" -ArgumentList "tunnel --url tcp://localhost:3389" -PassThru
+          Start-Sleep -Seconds 15
+          Write-Host "============================================"
+          Write-Host "🌐 LEYENDO URL DEL TÚNEL..."
+          Get-Content "tunnel_output.txt" | ForEach-Object {
+              if ($_ -match "https://.*\.trycloudflare\.com") {
+                  Write-Host "🔗 URL ENCONTRADA: $_"
+              }
+          }
+          Write-Host "============================================"
 
       - name: Keep Session Alive
         run: |
