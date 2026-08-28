@@ -29,7 +29,8 @@ jobs:
           Write-Host "🚀 WINDOWS RDP - CLOUDFLARE TUNNEL"
           Write-Host "============================================"
           Write-Host ""
-          Start-Process PowerShell -ArgumentList '-NoExit -Command "cloudflared tunnel --url tcp://localhost:3389"'
+         $url = & cloudflared tunnel --url tcp://localhost:3389
+          Write-Host "🌐 TUNNEL URL: $url"
           Start-Sleep -Seconds 15
           Write-Host ""
           Write-Host "✅ TUNNEL STARTED! Check separate PowerShell window for URL"
