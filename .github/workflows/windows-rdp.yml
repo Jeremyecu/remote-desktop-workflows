@@ -24,14 +24,18 @@ jobs:
           Write-Host "✅ Password Configured!"
 
       - name: Start Cloudflare Tunnel
-        run: |
-          Write-Host "============================================"
-          Write-Host "🚀 WINDOWS RDP - CLOUDFLARE TUNNEL"
-          Write-Host "============================================"
-          Write-Host ""
-          Start-Process PowerShell -ArgumentList '-NoExit -Command "cloudflared tunnel --url tcp://localhost:3389"'
-          Start-Sleep -Seconds 15
-          Write-Host ""
+  run: |
+    # Iniciar túnel y guardar salida
+    $process = Start-Process -NoNewWindow -RedirectStandardOutput "tunnel_output.txt" -FilePath "cloudflared" -ArgumentList "tunnel --url tcp://localhost:3389" -PassThru
+    Start-Sleep -Seconds 15
+    Write-Host "============================================"
+    Write-Host "🌐 LEYENDO URL DEL TÚNEL..."
+    Get-Content "tunnel_output.txt" | ForEach-Object {
+        if ($_ -match "https://.*\.trycloudflare\.com") {
+            Write-Host "🔗 URL ENCONTRADA: $_"
+        }
+    }
+    Write-Host "============================================"
           Write-Host "✅ TUNNEL STARTED! Check separate PowerShell window for URL"
           Write-Host ""
           Write-Host "📋 CONNECTION DETAILS:"
