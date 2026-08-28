@@ -13,18 +13,15 @@ jobs:
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
-          Write-Host "✅ RDP Enabled"
 
       - name: Set Administrator Password
         run: |
           Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd123!" -Force)
-          Write-Host "✅ Password Set"
 
       - name: Download ngrok
         run: |
           Invoke-WebRequest -Uri "https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip" -OutFile "ngrok.zip"
           Expand-Archive -Path "ngrok.zip" -DestinationPath "."
-          Write-Host "✅ ngrok downloaded"
 
       - name: Configure ngrok
         run: |
@@ -35,15 +32,16 @@ jobs:
       - name: Start ngrok tunnel
         run: |
           Start-Process -NoNewWindow -FilePath ".\ngrok.exe" -ArgumentList "tcp 3389"
-          Start-Sleep -Seconds 10
-          Write-Host "============================================"
-          Write-Host "🌐 OBTENIENDO URL NGROK..."
+          Start-Sleep -Seconds 15
           $response = Invoke-RestMethod -Uri "http://localhost:4040/api/tunnels"
           $url = $response.tunnels[0].public_url
+          Write-Host "========================================"
           Write-Host "🔗 URL NGROK: $url"
-          Write-Host "============================================"
-          # Mantener sesión activa
+          Write-Host "========================================"
+          Write-Host "USUARIO: runneradmin"
+          Write-Host "CONTRASEÑA: P@ssw0rd123!"
+          Write-Host "========================================"
           while ($true) {
             Start-Sleep -Seconds 60
-            Write-Host "✓ Active - $(Get-Date -Format 'HH:mm:ss')"
+            Write-Host "✓ Activo - $(Get-Date -Format 'HH:mm:ss')"
           }
