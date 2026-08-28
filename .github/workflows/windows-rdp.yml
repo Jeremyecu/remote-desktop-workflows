@@ -1,4 +1,4 @@
-name: WINDOWS RDP - CLOUDFLARE
+name: WINDOWS RDP - NGROK
 on:
   workflow_dispatch
 
@@ -8,38 +8,41 @@ jobs:
     timeout-minutes: 9999
 
     steps:
-      - name: Setup Cloudflared
-        uses: AnimMouse/setup-cloudflared@v2
-
       - name: Enable Windows RDP
         run: |
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
-          Write-Host "✅ RDP Enabled Successfully!"
+          Write-Host "✅ RDP Enabled"
 
       - name: Set Administrator Password
         run: |
           Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd123!" -Force)
-          Write-Host "✅ Password Configured!"
+          Write-Host "✅ Password Set"
 
-      - name: Start Cloudflare Tunnel
+      - name: Download ngrok
         run: |
-          # Iniciar túnel y guardar salida en archivo
-          $process = Start-Process -NoNewWindow -RedirectStandardOutput "tunnel_output.txt" -FilePath "cloudflared" -ArgumentList "tunnel --url tcp://localhost:3389" -PassThru
-          Start-Sleep -Seconds 15
-          Write-Host "============================================"
-          Write-Host "🌐 LEYENDO URL DEL TÚNEL..."
-          Get-Content "tunnel_output.txt" | ForEach-Object {
-              if ($_ -match "https://.*\.trycloudflare\.com") {
-                  Write-Host "🔗 URL ENCONTRADA: $_"
-              }
-          }
-          Write-Host "============================================"
+          Invoke-WebRequest -Uri "https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip" -OutFile "ngrok.zip"
+          Expand-Archive -Path "ngrok.zip" -DestinationPath "."
+          Write-Host "✅ ngrok downloaded"
 
-      - name: Keep Session Alive
+      - name: Configure ngrok
         run: |
-          Write-Host "⏳ Session Active - Keeping alive..."
+          .\ngrok.exe config add-authtoken $env:NGROK_AUTH_TOKEN
+        env:
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+
+      - name: Start ngrok tunnel
+        run: |
+          Start-Process -NoNewWindow -FilePath ".\ngrok.exe" -ArgumentList "tcp 3389"
+          Start-Sleep -Seconds 10
+          Write-Host "============================================"
+          Write-Host "🌐 OBTENIENDO URL NGROK..."
+          $response = Invoke-RestMethod -Uri "http://localhost:4040/api/tunnels"
+          $url = $response.tunnels[0].public_url
+          Write-Host "🔗 URL NGROK: $url"
+          Write-Host "============================================"
+          # Mantener sesión activa
           while ($true) {
             Start-Sleep -Seconds 60
             Write-Host "✓ Active - $(Get-Date -Format 'HH:mm:ss')"
